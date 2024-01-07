@@ -3,14 +3,27 @@ from torch import nn
 from sklearn.model_selection import KFold
 import numpy as np
 from Data_loader.dataLoader import data_loaders
+import argparse
+from tqdm import tqdm
+import random
 
-def main():
+def conf():
+    args = argparse.ArgumentParser()
+    args.add_argument("--data_path", type=str, default="C:\\Users\\IICT2\\Downloads\\Dataset_LCTSC")
+    args.add_argument("--output_path", type=str, default="E:\\IICT5\\Output_Dice_CE")
+    args.add_argument("--dataset", type=str, default="LCTSC")
+    args.add_argument("--model_name", type=str, default="our")
+    args.add_argument("--epoch_num", type=int, default=50)
+    args = args.parse_args()
+    return args
+
+def main(conf):
     # Configuration options
     k_folds = 5
     num_epochs = 20
     loss_function = nn.CrossEntropyLoss()
 
-    data_len = 700000
+    data_len = 70000
 
     # For fold results
     results = {}
@@ -31,8 +44,31 @@ def main():
         print(f'FOLD {fold}')
         print('--------------------------------')
 
-        loader_train, loader_valid = data_loaders(train_ids, test_ids)
+        loader_train, loader_valid = data_loaders(train_ids, test_ids, conf.data_path)
         loaders = {"train": loader_train, "valid": loader_valid}
+
+        for epoch in tqdm(range(conf.epoch_num)):
+            print("\n {epc} is running".format(epc=epoch))
+            loss_train = []
+            img_print = random.randint(500, 600)
+
+            for phase in ["train", 'valid']:
+                # if phase == "train":
+                #     validation_predict = {}
+                #     validation_true = {}
+                #     model.train()
+                # else:
+                #     model.eval()
+
+                for i, data in enumerate(loaders[phase]):
+                    x, y_true = data
+                    if i%5000==0:
+                        print(f"{i} -> x = {x} y= {y_true}")
+                    # x, y_true = x.to(device), y_true.to(device)
+
+                    # optimizer.zero_grad()
+                    #
+                    # with torch.set_grad_enabled(phase == "train"):
 
 
     #     # Init the neural network
@@ -121,4 +157,4 @@ def main():
     # print(f'Average: {sum / len(results.items())} %')
 
 if __name__ == "__main__":
-    main()
+    main(conf())
